@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String        @id @default(uuid())
+  name           String?
+  email          String        @unique
+  password       String?
+  role           Role          @default(USER)
+  reputation     Int           @default(0) // Seller Reputation Score
+  isVerified     Boolean       @default(false) // Manual KYC Verification
+  kycDocumentUrl String?       // Path to local storage for KTP
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  listings       Listing[]
+  transactionsAsBuyer  Transaction[] @relation("BuyerTransactions")
+  transactionsAsSeller Transaction[] @relation("SellerTransactions")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Listing {
+  id            String        @id @default(uuid())
+  title         String
+  description   String
+  price         Decimal       @db.Decimal(12, 2)
+  gameName      String
+  images        String[]      // Array of local image paths
+  isPremium     Boolean       @default(false)
+  status        ListingStatus @default(AVAILABLE)
+  sellerId      String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  seller        User          @relation(fields: [sellerId], references: [id])
+  transactions  Transaction[]
+}
+
+enum ListingStatus {
+  AVAILABLE
+  RESERVED
+  SOLD
+}
+
+model Transaction {
+  id            String        @id @default(uuid())
+  listingId     String
+  buyerId       String
+  sellerId      String
+  amount        Decimal       @db.Decimal(12, 2)
+  status        TxStatus      @default(PENDING) // Blind Escrow State
+  paymentUrl    String?       // Midtrans Payment URL
+  paymentId     String?       // Midtrans Transaction ID
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  listing       Listing       @relation(fields: [listingId], references: [id])
+  buyer         User          @relation("BuyerTransactions", fields: [buyerId], references: [id])
+  seller        User          @relation("SellerTransactions", fields: [sellerId], references: [id])
+}
+
+enum TxStatus {
+  PENDING
+  PAID          // Dana masuk ke Escrow (Midtrans)
+  HANDOVER      // Proses ganti email/password
+  COMPLETED     // Pembeli mengunci akun, dana diteruskan ke penjual
+  DISPUTED      // Sengketa
+  CANCELLED     // Dibatalkan
+}
