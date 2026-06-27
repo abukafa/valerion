@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install Dependencies
         run: npm ci
@@ -38,10 +38,9 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          # key: ${{ secrets.SERVER_SSH_KEY }} # Gunakan ini jika login SSH via Key
-          port: ${{ secrets.SERVER_PORT || 22 }}
+          port: ${{ secrets.SERVER_PORT || 2222 }}
           source: "deploy.zip"
-          target: "/home/${{ secrets.SERVER_USER }}/public_html/valerion"
+          target: "/home/${{ secrets.SERVER_USER }}/valerion.jazacademy.id"
 
       - name: Extract & Restart App di Server
         uses: appleboy/ssh-action@v1.0.0
@@ -49,26 +48,26 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          port: ${{ secrets.SERVER_PORT || 22 }}
+          port: ${{ secrets.SERVER_PORT || 2222 }}
           script: |
-            cd /home/${{ secrets.SERVER_USER }}/public_html/valerion || cd public_html/valerion
-            
+            cd /home/${{ secrets.SERVER_USER }}/valerion.jazacademy.id
+
             # Ekstrak file build
             unzip -o deploy.zip
             rm deploy.zip
-            
+
+            # Jalankan di virtual environment cPanel agar versi Node.js sesuai (v20)
+            source /home/${{ secrets.SERVER_USER }}/nodevenv/valerion.jazacademy.id/20/bin/activate
+
             # Install module khusus production
             npm ci --production
-            
+
             # Generate Prisma untuk arsitektur server
             npx prisma generate
-            
+
             # Push perubahan skema
             npx prisma db push --accept-data-loss
-            
+
             # Restart aplikasi Node.js cPanel
             mkdir -p tmp
             touch tmp/restart.txt
-            
-            # Atau jika menggunakan PM2, hilangkan pagarnya:
-            # pm2 restart valerion
