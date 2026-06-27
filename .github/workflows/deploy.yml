@@ -1,0 +1,47 @@
+name: Deploy to Arenhost
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          # Jika pakai SSH Key, ganti password dengan:
+          # key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            # Masuk ke direktori aplikasi (Sesuaikan path ini dengan path di cPanel Anda)
+            cd /home/${{ secrets.SERVER_USER }}/public_html/valerion || cd public_html/valerion
+            
+            # Tarik kode terbaru dari GitHub
+            git pull origin main
+            
+            # Install dependencies terbaru
+            npm install --production
+            
+            # Generate Prisma Client untuk PostgreSQL
+            npx prisma generate
+            
+            # Push perubahan skema (pastikan .env sudah dikonfigurasi di server)
+            npx prisma db push --accept-data-loss
+            
+            # Build aplikasi Next.js
+            npm run build
+            
+            # Restart aplikasi (Jika menggunakan Setup Node.js App di cPanel)
+            touch tmp/restart.txt
+            
+            # Atau jika menggunakan PM2, gunakan:
+            # pm2 restart valerion

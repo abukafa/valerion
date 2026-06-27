@@ -44,7 +44,7 @@ export function HeroBanner() {
       >
         {/* Brick Background with Parallax Slide */}
         <motion.div
-          className="absolute -inset-6 bg-[url('https://images.unsplash.com/photo-1511556820780-d912e42b4980?q=80&w=1200')] bg-cover bg-center"
+          className="absolute -inset-6 bg-[url('/img/backdrop.png')] bg-cover bg-center"
           style={{ x: bgX, y: bgY }}
           animate={{ scale: isHovered ? 1.05 : 1 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
