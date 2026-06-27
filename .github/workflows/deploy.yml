@@ -6,42 +6,69 @@ on:
       - main
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Deploy via SSH
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build Next.js
+        env:
+          # Next.js build butuh koneksi ke DB untuk pre-rendering halaman
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run build
+
+      - name: Compress Files (Untuk mempercepat transfer)
+        run: zip -r deploy.zip .next public package.json package-lock.json prisma next.config.ts
+
+      - name: Upload to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          # key: ${{ secrets.SERVER_SSH_KEY }} # Gunakan ini jika login SSH via Key
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          source: "deploy.zip"
+          target: "/home/${{ secrets.SERVER_USER }}/public_html/valerion"
+
+      - name: Extract & Restart App di Server
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          # Jika pakai SSH Key, ganti password dengan:
-          # key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
-            # Masuk ke direktori aplikasi (Sesuaikan path ini dengan path di cPanel Anda)
             cd /home/${{ secrets.SERVER_USER }}/public_html/valerion || cd public_html/valerion
             
-            # Tarik kode terbaru dari GitHub
-            git pull origin main
+            # Ekstrak file build
+            unzip -o deploy.zip
+            rm deploy.zip
             
-            # Install dependencies terbaru
-            npm install --production
+            # Install module khusus production
+            npm ci --production
             
-            # Generate Prisma Client untuk PostgreSQL
+            # Generate Prisma untuk arsitektur server
             npx prisma generate
             
-            # Push perubahan skema (pastikan .env sudah dikonfigurasi di server)
+            # Push perubahan skema
             npx prisma db push --accept-data-loss
             
-            # Build aplikasi Next.js
-            npm run build
-            
-            # Restart aplikasi (Jika menggunakan Setup Node.js App di cPanel)
+            # Restart aplikasi Node.js cPanel
+            mkdir -p tmp
             touch tmp/restart.txt
             
-            # Atau jika menggunakan PM2, gunakan:
+            # Atau jika menggunakan PM2, hilangkan pagarnya:
             # pm2 restart valerion
