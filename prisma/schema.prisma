@@ -1,12 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -14,10 +12,12 @@ model User {
   name           String?
   email          String        @unique
   password       String?
-  role           Role          @default(USER)
+  image          String?       // Google Profile Picture
+  role           String        @default("USER") // Changed from Enum for SQLite
   reputation     Int           @default(0) // Seller Reputation Score
   isVerified     Boolean       @default(false) // Manual KYC Verification
   kycDocumentUrl String?       // Path to local storage for KTP
+  kycRejectionReason String?   // Alasan penolakan KYC oleh admin
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -26,20 +26,16 @@ model User {
   transactionsAsSeller Transaction[] @relation("SellerTransactions")
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
 model Listing {
   id            String        @id @default(uuid())
   title         String
   description   String
-  price         Decimal       @db.Decimal(12, 2)
+  price         Float         // Changed from Decimal for SQLite
+  originalPrice Float?        // Harga Normal (Before Sale)
   gameName      String
-  images        String[]      // Array of local image paths
+  images        String        // Stored as JSON string since SQLite lacks String[]
   isPremium     Boolean       @default(false)
-  status        ListingStatus @default(AVAILABLE)
+  status        String        @default("AVAILABLE") // Changed from Enum
   sellerId      String
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -48,19 +44,13 @@ model Listing {
   transactions  Transaction[]
 }
 
-enum ListingStatus {
-  AVAILABLE
-  RESERVED
-  SOLD
-}
-
 model Transaction {
   id            String        @id @default(uuid())
   listingId     String
   buyerId       String
   sellerId      String
-  amount        Decimal       @db.Decimal(12, 2)
-  status        TxStatus      @default(PENDING) // Blind Escrow State
+  amount        Float         // Changed from Decimal for SQLite
+  status        String        @default("PENDING") // Changed from Enum
   paymentUrl    String?       // Midtrans Payment URL
   paymentId     String?       // Midtrans Transaction ID
   createdAt     DateTime      @default(now())
@@ -69,13 +59,4 @@ model Transaction {
   listing       Listing       @relation(fields: [listingId], references: [id])
   buyer         User          @relation("BuyerTransactions", fields: [buyerId], references: [id])
   seller        User          @relation("SellerTransactions", fields: [sellerId], references: [id])
-}
-
-enum TxStatus {
-  PENDING
-  PAID          // Dana masuk ke Escrow (Midtrans)
-  HANDOVER      // Proses ganti email/password
-  COMPLETED     // Pembeli mengunci akun, dana diteruskan ke penjual
-  DISPUTED      // Sengketa
-  CANCELLED     // Dibatalkan
 }

@@ -84,7 +84,7 @@ export function HeroBanner() {
                 transform: "rotate(-5deg)",
               }}
             >
-              marketplace
+              Marketplace
             </h2>
           </div>
         </motion.div>

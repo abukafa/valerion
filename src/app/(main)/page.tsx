@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { ProductCard } from "@/components/ProductCard";
 import { HeroBanner } from "@/components/HeroBanner";
 import { Zap, Store, ShoppingCart, UploadCloud, Home } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import Link from "next/link";
 
 export default function HomePage() {
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -60,162 +61,41 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Dummy data
-  const flashSaleItems = [
-    {
-      id: "1",
-      code: "Code-2562",
-      originalPrice: 580000,
-      discountPrice: 380000,
-      views: 24,
-      likes: 3,
-      image:
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80",
-    },
-    {
-      id: "2",
-      code: "Code-2573",
-      originalPrice: 550000,
-      discountPrice: 350000,
-      views: 56,
-      likes: 0,
-      image:
-        "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&q=80",
-    },
-    {
-      id: "3",
-      code: "Code-2580",
-      originalPrice: 750000,
-      discountPrice: 450000,
-      views: 12,
-      likes: 1,
-      image:
-        "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=500&q=80",
-    },
-    {
-      id: "4",
-      code: "Code-2562",
-      originalPrice: 580000,
-      discountPrice: 380000,
-      views: 24,
-      likes: 3,
-      image:
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80",
-    },
-    {
-      id: "5",
-      code: "Code-2573",
-      originalPrice: 550000,
-      discountPrice: 350000,
-      views: 56,
-      likes: 0,
-      image:
-        "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&q=80",
-    },
-    {
-      id: "6",
-      code: "Code-2580",
-      originalPrice: 750000,
-      discountPrice: 450000,
-      views: 12,
-      likes: 1,
-      image:
-        "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=500&q=80",
-    },
-  ];
+  // Check pending transactions
+  const [hasPending, setHasPending] = useState(false);
+  useEffect(() => {
+    import("@/modules/transaction/actions").then((module) => {
+      module.hasPendingTransactions().then(setHasPending);
+    });
+  }, []);
 
-  const allProducts = [
-    {
-      id: "101",
-      code: "Code-2350",
-      originalPrice: 437000,
-      discountPrice: 350000,
-      views: 261,
-      likes: 0,
-      image:
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80",
-    },
-    {
-      id: "102",
-      code: "Code-2510",
-      originalPrice: 2062000,
-      discountPrice: 1650000,
-      views: 152,
-      likes: 0,
-      image:
-        "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&q=80",
-    },
-    {
-      id: "103",
-      code: "Code-2516",
-      originalPrice: 2401000,
-      discountPrice: 1985000,
-      views: 137,
-      likes: 0,
-      image:
-        "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=500&q=80",
-    },
-    {
-      id: "105",
-      code: "Code-2142",
-      originalPrice: 1200000,
-      discountPrice: 900000,
-      views: 88,
-      likes: 2,
-      image:
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80",
-    },
-    {
-      id: "106",
-      code: "Code-2597",
-      originalPrice: 3200000,
-      discountPrice: 2800000,
-      views: 412,
-      likes: 15,
-      image:
-        "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&q=80",
-    },
-    {
-      id: "107",
-      code: "Code-2601",
-      originalPrice: 850000,
-      discountPrice: 700000,
-      views: 19,
-      likes: 1,
-      image:
-        "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=500&q=80",
-    },
-    {
-      id: "108",
-      code: "Code-2142",
-      originalPrice: 1200000,
-      discountPrice: 900000,
-      views: 88,
-      likes: 2,
-      image:
-        "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80",
-    },
-    {
-      id: "109",
-      code: "Code-2597",
-      originalPrice: 3200000,
-      discountPrice: 2800000,
-      views: 412,
-      likes: 15,
-      image:
-        "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500&q=80",
-    },
-    {
-      id: "110",
-      code: "Code-2601",
-      originalPrice: 850000,
-      discountPrice: 700000,
-      views: 19,
-      likes: 1,
-      image:
-        "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=500&q=80",
-    },
-  ];
+  // Database Data
+  const [dbListings, setDbListings] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Fetch data from Server Action
+    import("@/modules/listing/actions").then((module) => {
+      module.getAllListings().then(setDbListings);
+    });
+  }, []);
+
+  // Map DB data to match the ProductCard props, using useMemo to lock Math.random values
+  const mappedListings = useMemo(() => {
+    return dbListings.map((listing) => ({
+      id: listing.id,
+      code: listing.title.replace('Akun MLBB - ', ''), // Get the code part
+      originalPrice: listing.originalPrice || listing.price * 1.3, // Fallback if no normal price
+      discountPrice: listing.price,
+      views: Math.floor(Math.random() * 500) + 10,
+      likes: Math.floor(Math.random() * 50),
+      image: listing.images?.[0] || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80",
+      isBooked: listing.isBooked,
+      status: listing.status
+    }));
+  }, [dbListings]);
+
+  const flashSaleItems = mappedListings.slice(0, 4);
+  const allProducts = mappedListings.slice(4);
 
   return (
     <div className="flex flex-col pb-10 max-w-5xl mx-auto">
@@ -238,8 +118,14 @@ export default function HomePage() {
           </div>
         </button>
 
-        <button className="bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group">
-          <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/20 group-hover:bg-primary/30 flex items-center justify-center text-primary shrink-0 transition-colors">
+        <Link href="/dashboard/my-orders" className={`bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group relative ${hasPending ? 'animate-pulse border-orange-500/50' : ''}`}>
+          {hasPending && (
+            <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-orange-500 rounded-full animate-ping"></div>
+          )}
+          {hasPending && (
+            <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-orange-500 rounded-full"></div>
+          )}
+          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg ${hasPending ? 'bg-orange-500/20 text-orange-500' : 'bg-primary/20 text-primary'} group-hover:bg-primary/30 flex items-center justify-center shrink-0 transition-colors`}>
             <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
           </div>
           <div>
@@ -247,12 +133,12 @@ export default function HomePage() {
               Keranjang
             </div>
             <div className="text-[10px] md:text-xs text-foreground/50">
-              Cek akun yang sudah dipilih
+              {hasPending ? <span className="text-orange-400">Menunggu Pembayaran</span> : "Cek akun yang dipilih"}
             </div>
           </div>
-        </button>
+        </Link>
 
-        <button className="bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group">
+        <Link href="/post" className="bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group">
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/20 group-hover:bg-primary/30 flex items-center justify-center text-primary shrink-0 transition-colors">
             <UploadCloud className="w-5 h-5 md:w-6 md:h-6" />
           </div>
@@ -264,7 +150,7 @@ export default function HomePage() {
               Jual akun kamu di sini
             </div>
           </div>
-        </button>
+        </Link>
 
         <button className="bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group">
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/20 group-hover:bg-primary/30 flex items-center justify-center text-primary shrink-0 transition-colors">

@@ -1,4 +1,5 @@
 import { Heart, Eye } from "lucide-react";
+import Link from "next/link";
 
 interface ProductCardProps {
   id: string;
@@ -9,11 +10,20 @@ interface ProductCardProps {
   likes: number;
   image: string;
   isFlashSale?: boolean;
+  status?: string;
+  isBooked?: boolean;
 }
 
-export function ProductCard({ code, originalPrice, discountPrice, views, likes, image, isFlashSale }: ProductCardProps) {
+export function ProductCard({ id, code, originalPrice, discountPrice, views, likes, image, isFlashSale, status = "AVAILABLE", isBooked = false }: ProductCardProps) {
+  const isSold = status === "SOLD" || status === "SUSPENDED";
+  const isUnavailable = isSold || isBooked;
+
   return (
-    <div className="bg-card border border-card-border rounded-xl overflow-hidden flex flex-col min-w-[160px] md:min-w-[200px] w-full group relative">
+    <Link 
+      href={isUnavailable ? "#" : `/listing/${id}`}
+      className={`bg-card border border-card-border rounded-xl overflow-hidden block group relative shadow-md min-w-[160px] md:min-w-[200px] w-full ${isUnavailable ? 'opacity-60 cursor-not-allowed' : 'hover:border-primary/50 transition-all'}`}
+      onClick={(e) => isUnavailable && e.preventDefault()}
+    >
       {/* Flash Sale Badge */}
       {isFlashSale && (
         <div className="absolute top-2 left-2 z-10 bg-primary text-primary-foreground text-[10px] md:text-xs font-bold px-2 py-1 rounded-full shadow-md">
@@ -31,8 +41,24 @@ export function ProductCard({ code, originalPrice, discountPrice, views, likes, 
         <img 
           src={image} 
           alt={code} 
-          className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+          className={`object-cover w-full h-full transition-transform duration-300 ${!isUnavailable && 'group-hover:scale-105'} ${isUnavailable && 'grayscale'}`}
         />
+        
+        {/* Overlays */}
+        {isSold && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+            <span className="bg-red-600 text-white font-black px-4 py-2 text-xl md:text-2xl -rotate-12 border-2 border-white rounded shadow-xl uppercase tracking-widest">
+              SOLD OUT
+            </span>
+          </div>
+        )}
+        {!isSold && isBooked && (
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+            <span className="bg-orange-500 text-white font-black px-3 py-1.5 text-lg md:text-xl -rotate-12 border-2 border-white rounded shadow-xl uppercase tracking-widest">
+              BOOKED
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Details */}
@@ -52,11 +78,14 @@ export function ProductCard({ code, originalPrice, discountPrice, views, likes, 
             <span className="flex items-center gap-1"><Heart className="w-3 h-3" /> {likes}x disukai</span>
           </div>
           
-          <button className="w-full bg-primary text-primary-foreground font-bold py-2 rounded-lg text-xs md:text-sm hover:bg-primary/90 transition-colors shadow-[0_0_15px_rgba(255,77,0,0.5)] hover:shadow-[0_0_25px_rgba(255,77,0,0.8)]">
-            Lihat Detail
+          <button 
+            disabled={isUnavailable}
+            className="w-full bg-primary text-primary-foreground font-bold py-2 rounded-lg text-xs md:text-sm hover:bg-primary/90 transition-colors shadow-[0_0_15px_rgba(255,77,0,0.5)] hover:shadow-[0_0_25px_rgba(255,77,0,0.8)] disabled:opacity-50 disabled:shadow-none"
+          >
+            {isSold ? "Terjual" : isBooked ? "Dipesan" : "Lihat Detail"}
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
