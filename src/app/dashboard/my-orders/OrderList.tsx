@@ -42,11 +42,11 @@ export function OrderList({ orders }: { orders: any[] }) {
           await syncTransactionStatus(transactionId);
           router.refresh();
         },
-        onError: () => showAlert({ title: "Gagal", message: "Pembayaran gagal diproses.", type: "error" }),
+        onError: () => showAlert({ title: "Gagal", message: "Pembayaran gagal diproses.", type: "danger" }),
         onClose: () => {}
       });
     } else {
-      showAlert({ title: "Error", message: "Token pembayaran tidak valid.", type: "error" });
+      showAlert({ title: "Error", message: "Token pembayaran tidak valid.", type: "danger" });
     }
   };
 
@@ -64,9 +64,9 @@ export function OrderList({ orders }: { orders: any[] }) {
     startTransition(async () => {
       const result = await cancelOrder(id);
       if (result.error) {
-        showAlert({ title: "Gagal", message: result.error, type: "error" });
+        showAlert({ title: "Gagal", message: result.error, type: "danger" });
       } else {
-        showAlert({ title: "Berhasil", message: "Pesanan berhasil dibatalkan.", type: "success" });
+        showAlert({ title: "Berhasil", message: "Pesanan berhasil dibatalkan.", type: "info" });
         router.refresh();
       }
     });
@@ -86,9 +86,9 @@ export function OrderList({ orders }: { orders: any[] }) {
     startTransition(async () => {
       const result = await completeOrder(id);
       if (result.error) {
-        showAlert({ title: "Gagal", message: result.error, type: "error" });
+        showAlert({ title: "Gagal", message: result.error, type: "danger" });
       } else {
-        showAlert({ title: "Berhasil", message: "Pesanan selesai! Terima kasih telah berbelanja.", type: "success" });
+        showAlert({ title: "Berhasil", message: "Pesanan berhasil diselesaikan. Reputasi penjual telah ditambahkan.", type: "info" });
         router.refresh();
       }
     });

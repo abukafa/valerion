@@ -83,14 +83,14 @@ export default function HomePage() {
   const mappedListings = useMemo(() => {
     return dbListings.map((listing) => ({
       id: listing.id,
-      code: listing.title.replace('Akun MLBB - ', ''), // Get the code part
+      code: listing.title.replace("Akun MLBB - ", ""), // Get the code part
       originalPrice: listing.originalPrice || listing.price * 1.3, // Fallback if no normal price
       discountPrice: listing.price,
       views: Math.floor(Math.random() * 500) + 10,
       likes: Math.floor(Math.random() * 50),
-      image: listing.images?.[0] || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=500&q=80",
+      image: listing.images?.[0] || "/img/no-photo.jpg",
       isBooked: listing.isBooked,
-      status: listing.status
+      status: listing.status,
     }));
   }, [dbListings]);
 
@@ -118,14 +118,19 @@ export default function HomePage() {
           </div>
         </button>
 
-        <Link href="/dashboard/my-orders" className={`bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group relative ${hasPending ? 'animate-pulse border-orange-500/50' : ''}`}>
+        <Link
+          href="/dashboard/my-orders"
+          className={`bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group relative ${hasPending ? "animate-pulse border-orange-500/50" : ""}`}
+        >
           {hasPending && (
             <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-orange-500 rounded-full animate-ping"></div>
           )}
           {hasPending && (
             <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-orange-500 rounded-full"></div>
           )}
-          <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg ${hasPending ? 'bg-orange-500/20 text-orange-500' : 'bg-primary/20 text-primary'} group-hover:bg-primary/30 flex items-center justify-center shrink-0 transition-colors`}>
+          <div
+            className={`w-10 h-10 md:w-12 md:h-12 rounded-lg ${hasPending ? "bg-orange-500/20 text-orange-500" : "bg-primary/20 text-primary"} group-hover:bg-primary/30 flex items-center justify-center shrink-0 transition-colors`}
+          >
             <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
           </div>
           <div>
@@ -133,12 +138,19 @@ export default function HomePage() {
               Keranjang
             </div>
             <div className="text-[10px] md:text-xs text-foreground/50">
-              {hasPending ? <span className="text-orange-400">Menunggu Pembayaran</span> : "Cek akun yang dipilih"}
+              {hasPending ? (
+                <span className="text-orange-400">Menunggu Pembayaran</span>
+              ) : (
+                "Cek akun yang dipilih"
+              )}
             </div>
           </div>
         </Link>
 
-        <Link href="/post" className="bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group">
+        <Link
+          href="/post"
+          className="bg-card border border-card-border hover:border-primary/50 transition-all p-3 md:p-4 rounded-xl flex items-center gap-3 text-left shadow-md group"
+        >
           <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-primary/20 group-hover:bg-primary/30 flex items-center justify-center text-primary shrink-0 transition-colors">
             <UploadCloud className="w-5 h-5 md:w-6 md:h-6" />
           </div>
@@ -187,25 +199,33 @@ export default function HomePage() {
           {/* Countdown */}
           <div className="flex gap-2">
             <div className="bg-background border border-card-border px-3 py-2 rounded-lg text-center min-w-[60px] shadow-inner">
-              <div className="text-lg font-bold text-white">{String(timeLeft.days).padStart(2, '0')}</div>
+              <div className="text-lg font-bold text-white">
+                {String(timeLeft.days).padStart(2, "0")}
+              </div>
               <div className="text-[9px] text-foreground/50 font-medium">
                 DAYS
               </div>
             </div>
             <div className="bg-background border border-card-border px-3 py-2 rounded-lg text-center min-w-[60px] shadow-inner">
-              <div className="text-lg font-bold text-white">{String(timeLeft.hours).padStart(2, '0')}</div>
+              <div className="text-lg font-bold text-white">
+                {String(timeLeft.hours).padStart(2, "0")}
+              </div>
               <div className="text-[9px] text-foreground/50 font-medium">
                 HOURS
               </div>
             </div>
             <div className="bg-background border border-card-border px-3 py-2 rounded-lg text-center min-w-[60px] shadow-inner">
-              <div className="text-lg font-bold text-white">{String(timeLeft.minutes).padStart(2, '0')}</div>
+              <div className="text-lg font-bold text-white">
+                {String(timeLeft.minutes).padStart(2, "0")}
+              </div>
               <div className="text-[9px] text-foreground/50 font-medium">
                 MINUTES
               </div>
             </div>
             <div className="bg-background border border-card-border px-3 py-2 rounded-lg text-center min-w-[60px] shadow-inner">
-              <div className="text-lg font-bold text-white">{String(timeLeft.seconds).padStart(2, '0')}</div>
+              <div className="text-lg font-bold text-white">
+                {String(timeLeft.seconds).padStart(2, "0")}
+              </div>
               <div className="text-[9px] text-foreground/50 font-medium">
                 SECONDS
               </div>
@@ -214,7 +234,7 @@ export default function HomePage() {
         </div>
 
         {/* Carousel */}
-        <div 
+        <div
           ref={carouselRef}
           className="flex overflow-x-auto gap-4 pb-4 no-scrollbar -mx-4 px-4 md:mx-0 md:px-0 snap-x scroll-smooth"
         >

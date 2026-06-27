@@ -31,9 +31,7 @@ export function ImageGallery({ images, isPremium }: ImageGalleryProps) {
     });
   };
 
-  const mainImage =
-    images[currentIndex] ||
-    "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80";
+  const mainImage = images[currentIndex] || "/img/no-photo.jpg";
 
   return (
     <div className="flex flex-col gap-4">

@@ -7,28 +7,28 @@ const prisma = new PrismaClient();
 export async function getAllListings() {
   try {
     const listings = await prisma.listing.findMany({
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         seller: {
           select: {
             name: true,
             reputation: true,
             isVerified: true,
-            image: true
-          }
+            image: true,
+          },
         },
         transactions: {
           where: { status: "PENDING" },
-          select: { id: true }
-        }
-      }
+          select: { id: true },
+        },
+      },
     });
-    
+
     // Parse images JSON string back to array and add isBooked flag
-    return listings.map(listing => ({
+    return listings.map((listing) => ({
       ...listing,
       images: JSON.parse(listing.images || "[]"),
-      isBooked: listing.transactions.length > 0
+      isBooked: listing.transactions.length > 0,
     }));
   } catch (error) {
     console.error("Error fetching listings:", error);
@@ -46,14 +46,14 @@ export async function getListingById(id: string) {
             name: true,
             reputation: true,
             isVerified: true,
-            image: true
-          }
+            image: true,
+          },
         },
         transactions: {
           where: { status: "PENDING" },
-          select: { id: true }
-        }
-      }
+          select: { id: true },
+        },
+      },
     });
 
     if (!listing) return null;
@@ -61,7 +61,7 @@ export async function getListingById(id: string) {
     return {
       ...listing,
       images: JSON.parse(listing.images || "[]"),
-      isBooked: listing.transactions.length > 0
+      isBooked: listing.transactions.length > 0,
     };
   } catch (error) {
     console.error("Error fetching listing by ID:", error);
@@ -75,7 +75,9 @@ export async function createListing(formData: FormData) {
     const gameName = formData.get("gameName") as string;
     const price = parseFloat(formData.get("price") as string);
     const originalPriceInput = formData.get("originalPrice") as string;
-    const originalPrice = originalPriceInput ? parseFloat(originalPriceInput) : null;
+    const originalPrice = originalPriceInput
+      ? parseFloat(originalPriceInput)
+      : null;
     const description = formData.get("description") as string;
     const imageFiles = formData.getAll("images") as File[]; // Gets all appended files
 
@@ -94,7 +96,7 @@ export async function createListing(formData: FormData) {
     if (imageFiles && imageFiles.length > 0) {
       const fs = await import("fs/promises");
       const path = await import("path");
-      
+
       const uploadDir = path.join(process.cwd(), "public", "uploads");
       // Ensure the uploads directory exists
       await fs.mkdir(uploadDir, { recursive: true });
@@ -102,7 +104,7 @@ export async function createListing(formData: FormData) {
       for (const file of imageFiles) {
         if (file.size === 0) continue;
         const buffer = Buffer.from(await file.arrayBuffer());
-        const ext = file.name.split('.').pop() || 'png';
+        const ext = file.name.split(".").pop() || "png";
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
         const filePath = path.join(uploadDir, fileName);
         await fs.writeFile(filePath, buffer);
@@ -111,7 +113,7 @@ export async function createListing(formData: FormData) {
     }
 
     if (imagesArray.length === 0) {
-      imagesArray.push("https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80");
+      imagesArray.push("/img/no-photo.jpg");
     }
 
     const newListing = await prisma.listing.create({
@@ -123,8 +125,8 @@ export async function createListing(formData: FormData) {
         description,
         images: JSON.stringify(imagesArray),
         sellerId: sellerId,
-        isPremium: Math.random() > 0.8
-      }
+        isPremium: Math.random() > 0.8,
+      },
     });
 
     return { success: true, id: newListing.id };
@@ -145,19 +147,19 @@ export async function getMyListings() {
 
     const listings = await prisma.listing.findMany({
       where: { sellerId: session.user.id },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       include: {
         transactions: {
           where: { status: "PENDING" },
-          select: { id: true }
-        }
-      }
+          select: { id: true },
+        },
+      },
     });
-    
-    return listings.map(listing => ({
+
+    return listings.map((listing) => ({
       ...listing,
       images: JSON.parse(listing.images || "[]"),
-      isBooked: listing.transactions.length > 0
+      isBooked: listing.transactions.length > 0,
     }));
   } catch (error) {
     console.error("Error fetching my listings:", error);
@@ -175,12 +177,15 @@ export async function deleteListing(id: string) {
     }
 
     const listing = await prisma.listing.findUnique({ where: { id } });
-    if (!listing || (listing.sellerId !== session.user.id && session.user.role !== "ADMIN")) {
+    if (
+      !listing ||
+      (listing.sellerId !== session.user.id && session.user.role !== "ADMIN")
+    ) {
       throw new Error("Unauthorized to delete this listing");
     }
 
     await prisma.listing.delete({ where: { id } });
-    
+
     const { revalidatePath } = await import("next/cache");
     revalidatePath("/dashboard/my-listings");
 
@@ -201,7 +206,10 @@ export async function updateListing(id: string, formData: FormData) {
     }
 
     const listing = await prisma.listing.findUnique({ where: { id } });
-    if (!listing || (listing.sellerId !== session.user.id && session.user.role !== "ADMIN")) {
+    if (
+      !listing ||
+      (listing.sellerId !== session.user.id && session.user.role !== "ADMIN")
+    ) {
       throw new Error("Unauthorized to edit this listing");
     }
 
@@ -209,26 +217,30 @@ export async function updateListing(id: string, formData: FormData) {
     const gameName = formData.get("gameName") as string;
     const price = parseFloat(formData.get("price") as string);
     const originalPriceInput = formData.get("originalPrice") as string;
-    const originalPrice = originalPriceInput ? parseFloat(originalPriceInput) : null;
+    const originalPrice = originalPriceInput
+      ? parseFloat(originalPriceInput)
+      : null;
     const description = formData.get("description") as string;
-    
+
     const imageFiles = formData.getAll("images") as File[]; // New files
     const existingImagesRaw = formData.get("existingImages") as string;
-    const existingImages = existingImagesRaw ? JSON.parse(existingImagesRaw) : [];
+    const existingImages = existingImagesRaw
+      ? JSON.parse(existingImagesRaw)
+      : [];
 
     const imagesArray: string[] = [...existingImages];
 
     if (imageFiles && imageFiles.length > 0) {
       const fs = await import("fs/promises");
       const path = await import("path");
-      
+
       const uploadDir = path.join(process.cwd(), "public", "uploads");
       await fs.mkdir(uploadDir, { recursive: true });
 
       for (const file of imageFiles) {
         if (file.size === 0) continue;
         const buffer = Buffer.from(await file.arrayBuffer());
-        const ext = file.name.split('.').pop() || 'png';
+        const ext = file.name.split(".").pop() || "png";
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
         const filePath = path.join(uploadDir, fileName);
         await fs.writeFile(filePath, buffer);
@@ -237,7 +249,7 @@ export async function updateListing(id: string, formData: FormData) {
     }
 
     if (imagesArray.length === 0) {
-      imagesArray.push("https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80");
+      imagesArray.push("/img/no-photo.jpg");
     }
 
     await prisma.listing.update({
@@ -249,7 +261,7 @@ export async function updateListing(id: string, formData: FormData) {
         originalPrice,
         description,
         images: JSON.stringify(imagesArray),
-      }
+      },
     });
 
     const { revalidatePath } = await import("next/cache");

@@ -17,9 +17,10 @@ export function KYCList({ users }: { users: any[] }) {
   };
 
   const handleReject = (id: string) => {
-    if (confirm("Tolak dokumen KTP ini? (User harus upload ulang)")) {
+    const reason = window.prompt("Alasan penolakan? (User harus upload ulang)", "Dokumen tidak jelas/buram");
+    if (reason) {
       startTransition(async () => {
-        await rejectUserKYC(id);
+        await rejectUserKYC(id, reason);
       });
     }
   };

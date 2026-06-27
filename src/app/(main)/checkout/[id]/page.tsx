@@ -41,11 +41,13 @@ export default async function CheckoutPage({
 
   let images: string[] = [];
   try {
-    images = Array.isArray(listing.images) ? listing.images : JSON.parse(listing.images as string);
+    images = Array.isArray(listing.images)
+      ? listing.images
+      : JSON.parse(listing.images as string);
   } catch (e) {
-    images = typeof listing.images === 'string' ? [listing.images] : [];
+    images = typeof listing.images === "string" ? [listing.images] : [];
   }
-  const image = images[0] || "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&q=80";
+  const image = images[0] || "/img/no-photo.jpg";
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 pb-24 md:pb-8">
@@ -99,7 +101,12 @@ export default async function CheckoutPage({
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-secondary rounded-full flex items-center justify-center font-bold text-foreground text-xl overflow-hidden border-2 border-card-border">
                 {listing.seller.image ? (
-                  <img src={listing.seller.image} alt={listing.seller.name || "Seller"} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img
+                    src={listing.seller.image}
+                    alt={listing.seller.name || "Seller"}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
                 ) : (
                   listing.seller.name?.charAt(0).toUpperCase() || "U"
                 )}

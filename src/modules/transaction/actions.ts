@@ -2,7 +2,7 @@
 
 import { PrismaClient } from "@prisma/client";
 import { auth } from "@/auth";
-import { snap } from "@/lib/midtrans";
+import { snap, coreApi } from "@/lib/midtrans";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 const prisma = globalForPrisma.prisma || new PrismaClient();
@@ -204,7 +204,7 @@ export async function cancelOrder(transactionId: string) {
 
 export async function syncTransactionStatus(transactionId: string) {
   try {
-    const statusResponse = await snap.transaction.status(transactionId);
+    const statusResponse = await (coreApi as any).transaction.status(transactionId);
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
 
